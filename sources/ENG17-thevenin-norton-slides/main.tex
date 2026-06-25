@@ -1,0 +1,326 @@
+\documentclass[xcolor=dvipsnames,notheorems,aspectratio=169]{beamer}
+%\documentclass[xcolor=dvipsnames,notheorems,aspectratio=169]{beamer}
+\input{preamble}
+\input{quote}
+\input{style}
+%\input{risc-v}
+
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage[table]{xcolor}
+\definecolor{lavender}{rgb}{0.85, 0.88, 0.9}
+\definecolor{pastelred}{rgb}{1.0, 0.8, 0.8}
+\definecolor{pastelgreen}{rgb}{0.8, 1.0, 0.8}
+\definecolor{pastelorange}{rgb}{1.0, 0.9, 0.8}
+\definecolor{pastelblue}{rgb}{0.8, 0.87, 1.0}
+\definecolor{pastelslate}{rgb}{0.85, 0.88, 0.9}
+
+\definecolor{bluetext}{RGB}{38, 71, 176}
+\definecolor{orangetext}{RGB}{222, 114, 49}
+\definecolor{grayrow}{gray}{0.95}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+
+\newif\ifshowsolutions
+\showsolutionstrue
+%\showsolutionsfalse
+
+\newtcolorbox[auto counter, number within=section]{bluebox}[1]{
+    colback=blue!10, colframe=blue!80!black,
+    coltitle=white, fonttitle=\bfseries,
+    title={#1}
+}
+
+\newtcolorbox[auto counter, number within=section]{redbox}[2][]{
+    colback=red!10, colframe=red!80!black,
+    coltitle=white, fonttitle=\bfseries,
+    title={#2}
+}
+
+\newtcolorbox[auto counter, number within=section]{greenbox}[2][]{
+    colback=green!10, colframe=green!80!black,
+    coltitle=white, fonttitle=\bfseries,
+    title={#2}
+}
+
+\newtcolorbox[auto counter, number within=section]{solutionbox}[2][]{
+    colback=gray!10, colframe=gray,
+    coltitle=white, fonttitle=\bfseries,
+    title={#1}
+}
+
+\newtcolorbox[auto counter, number within=section]{cyanbox}[2][]{
+    colback=cyan!8,
+    colframe=cyan!60!black,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={#2},
+    arc=8pt
+}
+
+\newtcolorbox[auto counter, number within=section]{orangebox}[2][]{
+    colback=orange!10,
+    colframe=orange!70!black,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={#2},
+    arc=8pt
+}
+
+\newtcolorbox[auto counter, number within=section]{lemmabox}[1][]{
+    colback=purple!10,
+    colframe=purple!70!black,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={#1},
+    arc=8pt
+}
+
+
+
+
+
+% Pauses in math environment
+\makeatletter
+\let\save@measuring@true\measuring@true
+\def\measuring@true{%
+  \save@measuring@true
+  \def\beamer@sortzero##1{\beamer@ifnextcharospec{\beamer@sortzeroread{##1}}{}}%
+  \def\beamer@sortzeroread##1<##2>{}%
+  \def\beamer@finalnospec{}%
+}
+\makeatother
+
+\usetikzlibrary{matrix}
+\usetikzlibrary{trees}
+
+\providecommand{\tape}[3]{
+  \foreach \x [count=\y from 0] in {1,...,#2}{
+    \ifnum\y<1
+        \if#3\empty
+            \node (#1-\x) [minimum height=1.5em,minimum width=1.5em,outer sep=0pt,draw,rectangle,node distance=0pt] {};
+        \else
+            \node (#1-\x) [minimum height=1.5em,minimum width=1.5em,outer sep=0pt,draw,rectangle,node distance=0pt] at #3 {};
+        \fi
+    \else
+        \node (#1-\x) [minimum height=1.5em,minimum width=1.5em,outer sep=0pt,draw,rectangle,node distance=0pt, right=of #1-\y] {};
+    \fi
+  }
+}
+
+\lstdefinelanguage[RISC-V]{Assembler}
+{
+  alsoletter={.}, % allow dots in keywords
+  alsodigit={0x}, % hex numbers are numbers too!
+  morekeywords=[1]{ % instructions
+    lb, lh, lw, li, lbu, lhu,
+    sb, sh, sw,
+    sll, slli, srl, srli, sra, srai,
+    add, addi, sub, lui, auipc,
+    xor, xori, or, ori, and, andi,
+    slt, slti, sltu, sltiu,
+    beq, bne, blt, bge, bltu, bgeu,
+    j, jr, jal, jalr, ret,
+    scall, break, nop
+  },
+  morekeywords=[2]{ % sections of our code and other directives
+    .align, .ascii, .asciiz, .byte, .data, .double, .extern,
+    .float, .globl, .half, .kdata, .ktext, .set, .space, .text, .word
+  },
+  morekeywords=[3]{ % registers
+    zero, ra, sp, gp, tp, s0, fp,
+    t0, t1, t2, t3, t4, t5, t6,
+    s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,
+    a0, a1, a2, a3, a4, a5, a6, a7,
+    ft0, ft1, ft2, ft3, ft4, ft5, ft6, ft7,
+    fs0, fs1, fs2, fs3, fs4, fs5, fs6, fs7, fs8, fs9, fs10, fs11,
+    fa0, fa1, fa2, fa3, fa4, fa5, fa6, fa7
+  },
+  morecomment=[l]{;},   % mark ; as line comment start
+  morecomment=[l]{\#},  % as well as # (even though it is unconventional)
+  morestring=[b]",      % mark " as string start/end
+  morestring=[b]'       % also mark ' as string start/end
+}
+
+% usage example:
+
+% define some basic colors
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+  % listings sonderzeichen (for german weirdness)
+  literate={ö}{{\"o}}1
+           {ä}{{\"a}}1
+           {ü}{{\"u}}1,
+  basicstyle=\normalsize\ttfamily,                    % very small code
+  breaklines=true,                              % break long lines
+  commentstyle=\itshape\color{green!50!black},  % comments are green
+  keywordstyle=[1]\color{blue!80!black},        % instructions are blue
+  keywordstyle=[2]\color{orange!80!black},      % sections/other directives are orange
+  keywordstyle=[3]\color{red!50!black},         % registers are red
+  stringstyle=\color{mauve},                    % strings are from the telekom
+  identifierstyle=\color{teal},                 % user declared addresses are teal
+  frame=l,                                      % black line on the left side of code
+  language=[RISC-V]Assembler,                   % all code is RISC-V
+  tabsize=4,                                    % indent tabs with 4 spaces
+  showstringspaces=false                        % do not replace spaces with weird underlines
+}
+
+\renewcommand{\S}{\mathcal{S}}
+
+%\usepackage{enumitem}
+% Set spacing for all itemize environments
+%\setlist[itemize]{before=\vskip 0.5cm, after=\vskip 0.5cm}
+
+\makeatletter
+%\g@addto@macro\normalsize{%
+%    \setlength\belowdisplayskip{-0pt}
+%}
+
+\AtBeginSection[]
+{
+    \begin{frame}
+        \usebeamerfont{title}\insertsectionhead\par%
+    \end{frame}
+}
+
+
+
+\newcommand{\inserteqstrut}[1]{%
+\rlap{\ensuremath{#1}}%
+\phantom{\hspace{10cm}}}
+    
+\providecommand{\ito}{It\^o}
+
+\title{ENG17: Circuits I \\ Circuit Analysis Techniques: Thevenin and Norton Equivalence + Maximum Power Transfer}
+\author{Anthony Thomas}
+
+\begin{document}
+
+\begin{frame}
+    \maketitle
+\end{frame}
+
+\begin{frame}{Abstraction}
+\begin{itemize}
+    \item Modern engineering problems are extraordinarily complex:
+\end{itemize}
+\begin{center}
+    \includegraphics[width=0.8\linewidth]{figures/phone-block-diagram.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Abstraction}
+\begin{itemize}
+    \item Even individual pieces are highly sophisticated\footnote{ADC block diagram for TI-MSP432P microcontroller line.}:
+\end{itemize}
+\begin{center}
+    \includegraphics[width=0.6\linewidth]{figures/precision-adc-block-diagram.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Abstraction}
+\begin{cyanbox}{Modularity}
+\begin{itemize}
+    \item Our ability to design modern engineered systems is completely predicated on being able to break them down into simpler pieces that can be developed (more or less) independently.
+    \item Each component provides an \emph{interface} that allows us to understand that component's functionality and behavior without knowing \emph{exactly} how it is implemented.
+    \item I don't want to have to understand the low-level details of RF design to work on processor microarchitecture.
+\end{itemize}
+\end{cyanbox}
+\end{frame}
+
+\begin{frame}{Thevenin's Theorem}
+\begin{itemize}
+    \item Thevenin's and Norton's Theorems are fundamental results in this regard:
+\end{itemize}
+\begin{orangebox}{Thevenin's Theorem (Thevenin Equivalence)}
+    \begin{itemize}
+        \item A linear circuit can be represented at its output terminals by an equivalent circuit consisting of a series combination of a voltage source $v_{th}$ and a resistor $R_{th}$.
+    \end{itemize}
+\end{orangebox}
+\begin{greenbox}{Intuition}
+\begin{itemize}
+    \item Thevenin Equivalence allows us to treat potentially very complex portions of a design as a simple equivalent circuit that ``appears the same'' to the rest of the circuit.
+    \item By ``appears the same'' we mean: delivers the same current and has the same voltage across its terminals.
+\end{itemize}
+\end{greenbox}
+\end{frame}
+
+\begin{frame}[t]{Finding $v_{th}$}
+\begin{itemize}
+    \item Finding the Thevenin equivalent circuit amounts to finding: $v_{th}$ and $R_{th}$.
+    \item \textbf{Finding}: $v_{th}$
+    \begin{itemize}
+        \item For equivalence to hold, no matter what ``load'' ($R_{L}$) we connect, both the original circuit and the Thevenin equivalent must supply the same current $i_{L}$.
+        \item How can we use this to calculate $v_{th}$?
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Finding $R_{th}$}
+\begin{itemize}
+    \item Three common methods to find $R_{th}$:
+    \begin{itemize}
+        \item[(1)] Short-Circuit Method
+        \item[(2)] Equivalent-Resistance Method
+        \item[(3)] External-Source Method
+    \end{itemize}
+    \item Differ in assumptions about nature of voltage/current sources. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Norton Equivalence}
+\begin{itemize}
+    \item By applying source-transformation to the Thevenin equivalent, we obtain the following \emph{corollary}:\footnote{A corollary is a result that follows as a more-or-less straightforward consequence of a theorem.}
+\end{itemize}
+\begin{orangebox}{Norton Equivalence}
+\begin{itemize}
+    \item A linear circuit can be represented at its output terminals by an equivalent circuit consisting of a parallel combination of a current source $i_{N}$ and a resistor $R_{N}$.
+\end{itemize}
+\end{orangebox}
+\begin{redbox}{Test Yourself}
+\begin{itemize}
+    \item Given a circuit in Thevenin equivalent form, derive the Norton equivalent.
+\end{itemize}
+\end{redbox}
+\end{frame}
+
+\begin{frame}{Maximum Power Transfer}
+\begin{itemize}
+    \item A famous electrical engineer:
+\end{itemize}
+\begin{center}
+    \includegraphics[width=0.75\linewidth]{figures/unlimited-power.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[t]{Maximum Power Transfer}
+\begin{itemize}
+    \item In real life, power is limited, but we may want to maximize the power transferred from a source to some ``load'' (e.g. resistor).
+    \item \textbf{Question}: for what load resistance is the power delivered to $R_{L}$ maximized?
+    \pause
+    \item Perhaps surprisingly:
+\end{itemize}
+\begin{cyanbox}{Maximum Power Transfer}
+\begin{itemize}
+    \item For an active (power-generating) circuit modeled by a Thevenin equivalent $v_{s}$ and $R_{s}$, power transfer to a passive load $R_{L}$ is maximized when:
+    \[
+        R_{L} = R_{s},
+    \]
+    and the power delivered is:
+    \[
+        p_{L}^{*} = \frac{v_{s}^{2}}{4R_{L}}.
+    \]
+\end{itemize}
+\end{cyanbox}
+\end{frame}
+
+\begin{frame}[t]{Maximum Power Transfer}
+\begin{itemize}
+    \item Where did this come from?
+\end{itemize}
+\end{frame}
+
+\end{document}
