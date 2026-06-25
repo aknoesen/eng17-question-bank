@@ -1,0 +1,577 @@
+%
+% Lecture notes for ENG17: Circuits I
+% Topic: Thevenin & Norton Equivalence + Maximum Power Transfer
+% Based on the UC Berkeley EECS lecture notes template.
+% Instructor: Anthony Thomas, UC Davis, Spring 2025
+%
+
+\documentclass[twoside]{article}
+\setlength{\oddsidemargin}{0.25 in}
+\setlength{\evensidemargin}{-0.25 in}
+\setlength{\topmargin}{-0.6 in}
+\setlength{\textwidth}{6.5 in}
+\setlength{\textheight}{8.5 in}
+\setlength{\headsep}{0.75 in}
+\setlength{\parindent}{0 in}
+\setlength{\parskip}{0.1 in}
+
+% ---- Shorthand macros ----
+\def\R{{\mathbb{R}}}
+\def\C{{\mathbb{C}}}
+\def\pr{{\rm Pr}}
+\def\E{{\mathbb E}}
+
+\usepackage{enumitem}
+\setlist{topsep=0pt, partopsep=0pt, itemsep=2pt, parsep=0pt}
+
+\usepackage{hyperref}
+\usepackage{amsmath,amsfonts,graphicx}
+\usepackage[most]{tcolorbox}
+
+% ---- Coloured boxes (same palette as series-RLC notes) ----
+\newtcolorbox[auto counter, number within=section]{bluebox}[1]{
+    colback=blue!10, colframe=blue!80!black,
+    coltitle=white, fonttitle=\bfseries, title={#1}
+}
+\newtcolorbox[auto counter, number within=section]{redbox}[2][]{
+    colback=red!10, colframe=red!80!black,
+    coltitle=white, fonttitle=\bfseries, title={#2}
+}
+\newtcolorbox[auto counter, number within=section]{greenbox}[2][]{
+    colback=green!10, colframe=green!80!black,
+    coltitle=white, fonttitle=\bfseries, title={#2}
+}
+\newtcolorbox[auto counter, number within=section]{solutionbox}[2][]{
+    colback=gray!10, colframe=gray,
+    coltitle=white, fonttitle=\bfseries, title={#1}
+}
+\newtcolorbox[auto counter, number within=section]{cyanbox}[2][]{
+    colback=cyan!8, colframe=cyan!60!black,
+    coltitle=white, fonttitle=\bfseries, title={#2}, arc=8pt
+}
+\newtcolorbox[auto counter, number within=section]{orangebox}[2][]{
+    colback=orange!10, colframe=orange!70!black,
+    coltitle=white, fonttitle=\bfseries, title={#2}, arc=8pt
+}
+\newtcolorbox[auto counter, number within=section]{lemmabox}[1][]{
+    colback=purple!10, colframe=purple!70!black,
+    coltitle=white, fonttitle=\bfseries, title={#1}, arc=8pt
+}
+
+% ---- Lecture header ----
+\newcounter{lecnum}
+\renewcommand{\thepage}{\thelecnum-\arabic{page}}
+\renewcommand{\thesection}{\thelecnum.\arabic{section}}
+\renewcommand{\theequation}{\thelecnum.\arabic{equation}}
+\renewcommand{\thefigure}{\thelecnum.\arabic{figure}}
+\renewcommand{\thetable}{\thelecnum.\arabic{table}}
+
+\newcommand{\lecture}[4]{
+   \pagestyle{myheadings}
+   \thispagestyle{plain}
+   \newpage
+   \setcounter{lecnum}{#1}
+   \setcounter{page}{1}
+   \noindent
+   \begin{center}
+   \framebox{
+      \vbox{\vspace{2mm}
+    \hbox to 6.28in { {\bf ENG17: Circuits I
+    \hfill Spring 2025} }
+       \vspace{4mm}
+       \hbox to 6.28in { {\Large \hfill #2  \hfill} }
+       \vspace{2mm}
+       \hbox to 6.28in { {\it Lecturer: #3 } \hfill }
+      \vspace{2mm}}
+   }
+   \end{center}
+   \markboth{#2}{#2}
+
+   {\bf Note}: {\it \LaTeX{} template courtesy of UC Berkeley EECS dept.}
+
+   {\bf Disclaimer}: {\it These notes have not been subjected to the
+   usual scrutiny reserved for formal publications.  They may be distributed
+   outside this class only with the permission of the Instructor.
+   \textbf{You may not upload these notes to Chegg, CourseHero, or any similar
+   cheating service.}}
+   \vspace*{4mm}
+}
+
+\renewcommand{\cite}[1]{[#1]}
+\newtheorem{theorem}{Theorem}[lecnum]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newenvironment{proof}{{\bf Proof:}}{\hfill\rule{2mm}{2mm}}
+
+% ---- Circuit diagram helper (circuitikz) ----
+\usepackage{circuitikz}
+
+\begin{document}
+
+\lecture{2}{Th\'{e}venin \& Norton Equivalence; Maximum Power Transfer}{Anthony Thomas}{}
+
+%===========================================================================
+\section{Prerequisites}
+%===========================================================================
+
+These notes assume familiarity with the following material:
+\begin{itemize}
+    \item Ohm's law: $v = iR$.
+    \item Kirchhoff's Current Law (KCL) and Kirchhoff's Voltage Law (KVL).
+    \item Node-voltage and mesh-current methods.
+    \item Independent and dependent voltage/current sources.
+    \item Power dissipated in a resistor: $p = i^{2}R = v^{2}/R$.
+    \item The concept of a \emph{linear} circuit (superposition, proportionality).
+\end{itemize}
+
+%===========================================================================
+\section{Motivation: Why Circuit Equivalence?}
+%===========================================================================
+
+\subsection{The Complexity Problem}
+
+Modern circuits are extraordinarily complex.  A smartphone SoC contains tens of billions of transistors; a precision analog-to-digital converter contains dozens of sub-blocks, each of which contains hundreds of components.  If we had to analyse every transistor every time we designed a new system, engineering would grind to a halt.
+
+The solution used by every practising engineer is \emph{abstraction}: decompose the system into sub-circuits, and replace each sub-circuit by a simple equivalent model at its terminals.  The rest of the system sees only the equivalent model — it is completely insensitive to what is happening inside the sub-circuit.
+
+\subsection{The Abstraction Principle}
+
+\begin{orangebox}{Modularity}
+A complex circuit $\mathcal{C}$ containing independent sources, dependent sources, and linear resistors can be replaced, \emph{at a pair of output terminals}, by a simple two-element equivalent that is indistinguishable from the original circuit as seen from outside those terminals.
+\end{orangebox}
+
+``Indistinguishable'' means that for \emph{every} possible load connected to the terminals, the equivalent circuit supplies exactly the same terminal voltage and terminal current as the original.  Th\'{e}venin's and Norton's theorems tell us exactly what the two-element equivalent looks like and how to find it.
+
+%===========================================================================
+\section{The Terminal \texorpdfstring{$v$--$i$}{v-i} Characteristic of a Linear Circuit}
+%===========================================================================
+
+\subsection{What Does a Linear Sub-Circuit Look Like at Its Terminals?}
+
+Consider any two-terminal sub-circuit $\mathcal{C}$ built from linear resistors, independent sources, and linear dependent sources.  Label the terminal voltage $v$ (positive at terminal $a$) and the terminal current $i$ (defined as the current entering terminal $a$).
+
+By linearity, $v$ must be a linear function of $i$:
+\[
+    v = v_{\text{oc}} - R_{\text{th}}\,i,
+\]
+where $v_{\text{oc}}$ and $R_{\text{th}}$ are constants that depend on the internal structure of $\mathcal{C}$.  This is simply the equation of a straight line in the $v$--$i$ plane.
+
+\subsection{Intercepts and Slope}
+
+Two special operating points identify the two constants:
+
+\begin{itemize}
+    \item \textbf{Open-circuit point} ($i = 0$): $v = v_{\text{oc}}$.  This is the terminal voltage when nothing is connected.
+    \item \textbf{Short-circuit point} ($v = 0$): $0 = v_{\text{oc}} - R_{\text{th}}\,i_{\text{sc}}$, so $i_{\text{sc}} = v_{\text{oc}}/R_{\text{th}}$.
+    \item \textbf{Slope}: $\mathrm{d}v/\mathrm{d}i = -R_{\text{th}}$ (negative, since a larger current demands a larger internal voltage drop).
+\end{itemize}
+
+\begin{cyanbox}{Key Insight}
+Because the $v$--$i$ characteristic of \emph{any} linear two-terminal circuit is a straight line, only \emph{two} parameters are needed to describe it completely: the $v$-intercept $v_{\text{oc}}$ and the slope $-R_{\text{th}}$.  This is exactly what a series voltage source and series resistor provide — and that is precisely the Th\'{e}venin equivalent.
+\end{cyanbox}
+
+%===========================================================================
+\section{Th\'{e}venin's Theorem}
+%===========================================================================
+
+\subsection{Formal Statement}
+
+\begin{orangebox}{Th\'{e}venin's Theorem}
+Any linear two-terminal circuit can be replaced by an equivalent circuit consisting of a \textbf{voltage source} $v_{th}$ in \textbf{series} with a \textbf{resistor} $R_{th}$, where:
+\[
+    v_{th} = v_{\text{oc}},
+\]
+the open-circuit voltage at the terminals, and $R_{th}$ is the Th\'{e}venin equivalent resistance (to be determined by one of three methods in Section~\ref{sec:rth}).
+\end{orangebox}
+
+The equivalent circuit is shown schematically below.  A load $R_{L}$ connected to the original circuit sees an identical terminal voltage and current when it is connected to the Th\'{e}venin equivalent instead:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.80\linewidth]{figures/thevenin-equivalence.pdf}
+    \caption{Original circuit (left) and its Th\'{e}venin equivalent (right).  Both produce the same $(v,i)$ pair at terminals $a$--$b$ for any load.}
+    \label{fig:thevenin-equiv}
+\end{figure}
+
+\subsection{Finding \texorpdfstring{$v_{th}$}{vth}: Open-Circuit Voltage}
+
+The Th\'{e}venin voltage equals the open-circuit voltage: \emph{leave the terminals $a$--$b$ unconnected} (no load) and find the voltage that appears across them.
+
+\[
+    \boxed{v_{th} = v_{\text{oc}}}
+\]
+
+With the terminals open, no current flows into the external circuit; all analysis is confined to the internal network.  Any standard technique — node voltage, mesh current, superposition — may be used.
+
+\begin{redbox}{Common Pitfall}
+Do \textbf{not} connect any external component while finding $v_{th}$.  The terminals must be truly open (zero current constraint); adding even a wire changes the answer.
+\end{redbox}
+
+%===========================================================================
+\section{Finding \texorpdfstring{$R_{th}$}{Rth}: Three Methods}
+\label{sec:rth}
+%===========================================================================
+
+The Th\'{e}venin resistance $R_{th}$ can be found by three different methods.  The method of choice depends on whether the circuit contains dependent sources.
+
+\subsection{Method 1 — Short-Circuit Current}
+
+Short the terminals $a$--$b$ (connect a wire from $a$ to $b$), and find the resulting current $i_{sc}$ flowing out of terminal $a$ into the short.  Then:
+\[
+    \boxed{R_{th} = \frac{v_{th}}{i_{sc}} = \frac{v_{\text{oc}}}{i_{sc}}}
+\]
+
+\textbf{Why does this work?}  The Th\'{e}venin model with a short across its terminals gives a current $v_{th}/R_{th}$.  Equating that to $i_{sc}$ and solving for $R_{th}$ gives the formula above.
+
+\begin{cyanbox}{Applicability of Method 1}
+Works for any linear circuit containing both independent and dependent sources.  Requires solving for both $v_{oc}$ and $i_{sc}$, which means two separate analyses.
+\end{cyanbox}
+
+\subsection{Method 2 — Source Deactivation (Equivalent Resistance)}
+
+\begin{enumerate}
+    \item \textbf{Deactivate all independent sources}: replace every independent voltage source with a short circuit ($v = 0$) and every independent current source with an open circuit ($i = 0$).
+    \item \textbf{Compute the equivalent resistance} seen looking into the terminals $a$--$b$ using series/parallel combination rules.
+\end{enumerate}
+
+\[
+    R_{th} = R_{\text{eq}}\big|_{\text{independent sources off}}
+\]
+
+\begin{redbox}{Critical Restriction}
+\textbf{Method 2 is only valid when there are NO dependent sources in the circuit.}  Deactivating an independent source while a dependent source remains active changes the relationship between the controlling variable and the source's output, making the resistance calculation incorrect.
+\end{redbox}
+
+\textbf{Why must we not touch dependent sources?}  A dependent source's output is controlled by a voltage or current elsewhere in the circuit.  If we set it to zero (deactivate it), we are imposing $v = 0$ or $i = 0$ on the controlling variable, which is not generally the operating condition — the dependent source is part of the resistance the rest of the circuit ``sees''.
+
+\subsection{Method 3 — External Test Source}
+
+\begin{enumerate}
+    \item Deactivate all \emph{independent} sources (same step as Method 2).
+    \item Leave all \emph{dependent} sources intact.
+    \item Apply an external \textbf{test voltage} $v_x$ at the terminals (or equivalently a test current $i_x$).
+    \item Find the resulting current $i_x$ drawn from $v_x$ (or the voltage $v_x$ across the applied current).
+    \item Compute:
+    \[
+        \boxed{R_{th} = \frac{v_x}{i_x}}
+    \]
+\end{enumerate}
+
+\begin{cyanbox}{Applicability of Method 3}
+Works for \emph{any} linear circuit, including those with dependent sources.  It is the most general method and is required whenever dependent sources are present.  Either a test voltage or a test current may be applied; a common convention is to set $v_x = 1\,\mathrm{V}$ and solve for $i_x$, or to set $i_x = 1\,\mathrm{A}$ and solve for $v_x$.
+\end{cyanbox}
+
+\textbf{Intuition.}  After independent sources are deactivated, the remaining network (including all dependent sources) still responds to excitation.  Applying a test source probes exactly the impedance that an external load would see — which is $R_{th}$.
+
+%===========================================================================
+\section{Norton's Theorem}
+%===========================================================================
+
+\subsection{Formal Statement}
+
+\begin{orangebox}{Norton's Theorem}
+Any linear two-terminal circuit can also be represented by a \textbf{current source} $i_{N}$ in \textbf{parallel} with a \textbf{resistor} $R_{N}$, where:
+\[
+    i_{N} = i_{sc}, \qquad R_{N} = R_{th}.
+\]
+\end{orangebox}
+
+\subsection{Derivation from Th\'{e}venin via Source Transformation}
+
+Norton's theorem is a direct consequence of Th\'{e}venin's theorem and the source-transformation identity.  Recall that a voltage source $V_s$ in series with a resistor $R$ is equivalent (at the terminals) to a current source $I_s = V_s/R$ in parallel with the same resistor $R$:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.70\linewidth]{figures/source-transformation.pdf}
+    \caption{Source transformation: series $V_s$--$R$ (left) $\Longleftrightarrow$ parallel $I_s$--$R$ (right), with $I_s = V_s/R$.}
+    \label{fig:source-xform}
+\end{figure}
+
+Applying this transformation to the Th\'{e}venin equivalent ($v_{th}$ in series with $R_{th}$) yields:
+\begin{align}
+    i_N &= \frac{v_{th}}{R_{th}} = i_{sc}, \\
+    R_N &= R_{th}.
+\end{align}
+This is the Norton equivalent.  Note that the \emph{same} resistance appears in both equivalents; only the source type changes.
+
+\subsection{The Th\'{e}venin--Norton Parameter Triangle}
+
+The three parameters $v_{th}$, $i_N$, and $R_{th}$ are not independent:
+\[
+    v_{th} = i_N R_{th}, \qquad i_N = \frac{v_{th}}{R_{th}}, \qquad R_{th} = \frac{v_{th}}{i_N}.
+\]
+Knowing any two determines the third.  This triangle of relationships lets you freely convert between the Th\'{e}venin and Norton forms.
+
+\begin{cyanbox}{Parameter Triangle Summary}
+\begin{center}
+\begin{tabular}{ccc}
+    $v_{th} = i_N R_{th}$ & \quad & (Th\'{e}venin voltage) \\[4pt]
+    $i_N   = v_{th}/R_{th}$ & \quad & (Norton current) \\[4pt]
+    $R_{th} = v_{th}/i_N$ & \quad & (Th\'{e}venin/Norton resistance)
+\end{tabular}
+\end{center}
+\end{cyanbox}
+
+%===========================================================================
+\section{Worked Examples}
+%===========================================================================
+
+\subsection{Example 1: Independent Sources Only (Methods 1 and 2)}
+
+\begin{greenbox}{}{Example 1 — Voltage Divider with Resistive Load}
+
+\textbf{Given circuit:} A voltage source $V_s = 20\,\mathrm{V}$ connected in series with $R_1 = 5\,\Omega$; the series combination connects node $a$ (top) to node $b$ (bottom, ground).  A shunt resistor $R_2 = 20\,\Omega$ connects node $a$ to ground.  Find the Th\'{e}venin and Norton equivalents looking into terminals $a$--$b$.
+
+\textbf{Step 1: Find $v_{th} = v_{\mathrm{oc}}$.}
+
+With the terminal pair open (no external load), the circuit is simply $V_s$, $R_1$, and $R_2$ in series from source to ground.  By the voltage divider:
+\[
+    v_{th} = v_{\mathrm{oc}} = V_s \cdot \frac{R_2}{R_1 + R_2}
+           = 20 \cdot \frac{20}{5 + 20} = 20 \cdot \frac{20}{25} = 16\,\mathrm{V}.
+\]
+
+\textbf{Step 2a: Find $R_{th}$ by Method 2 (source deactivation).}
+
+Replace $V_s$ with a short circuit.  Looking into $a$--$b$, we see $R_1$ and $R_2$ in parallel:
+\[
+    R_{th} = R_1 \| R_2 = \frac{R_1 R_2}{R_1 + R_2}
+           = \frac{5 \times 20}{5 + 20} = \frac{100}{25} = 4\,\Omega.
+\]
+
+\textbf{Step 2b: Verify with Method 1 (short-circuit current).}
+
+Short terminals $a$--$b$.  Now $R_2$ is bypassed (shorted) and the only impedance in the loop is $R_1$:
+\[
+    i_{sc} = \frac{V_s}{R_1} = \frac{20}{5} = 4\,\mathrm{A}.
+\]
+Cross-check: $R_{th} = v_{th}/i_{sc} = 16/4 = 4\,\Omega$. \checkmark
+
+\textbf{Results:}
+\[
+    \boxed{v_{th} = 16\,\mathrm{V}, \quad R_{th} = 4\,\Omega, \quad i_N = 4\,\mathrm{A}.}
+\]
+
+The Th\'{e}venin equivalent is a $16\,\mathrm{V}$ source in series with $4\,\Omega$; the Norton equivalent is a $4\,\mathrm{A}$ source in parallel with $4\,\Omega$.
+\end{greenbox}
+
+\subsection{Example 2: Circuit with a Dependent Source (Method 3 Required)}
+
+\begin{greenbox}{}{Example 2 — Current-Controlled Current Source (CCCS)}
+
+\textbf{Given circuit:} An independent current source $I_s = 2\,\mathrm{A}$ drives node $a$ from ground.  A resistor $R_1 = 4\,\Omega$ connects node $a$ to ground.  A current-controlled current source (CCCS) of value $\beta\,i_1 = 3\,i_1$ also connects node $a$ to ground (flowing downward, i.e., leaving node $a$), where $i_1$ is the current flowing \emph{downward} through $R_1$.  Terminal $b$ is ground.  Find the Th\'{e}venin equivalent.
+
+\textbf{Step 1: Find $v_{th} = v_{\mathrm{oc}}$.}
+
+With the terminals open, all currents are confined to the node-$a$ to ground branches.  Let $v_a = v_{th}$.  Then:
+\[
+    i_1 = \frac{v_a}{R_1} = \frac{v_a}{4}.
+\]
+Applying KCL at node $a$ (currents entering from $I_s$ must equal currents leaving through $R_1$ and the CCCS):
+\[
+    I_s = i_1 + 3\,i_1 = 4\,i_1 = 4 \cdot \frac{v_a}{4} = v_a.
+\]
+Therefore:
+\[
+    v_{th} = v_a = I_s = 2\,\mathrm{V}.
+\]
+
+\textbf{Step 2: Find $R_{th}$ by Method 3 (test source).}
+
+Because a dependent source is present, Method 2 is not valid.  We apply Method 3:
+\begin{itemize}
+    \item Deactivate $I_s$ (replace with an open circuit since it is a current source).
+    \item Apply a test voltage $v_x$ at terminal $a$ (with $b$ at ground).
+    \item The controlling current becomes $i_1 = v_x/R_1 = v_x/4$ (downward through $R_1$).
+    \item The CCCS now draws $3\,i_1 = 3v_x/4$ from node $a$ to ground.
+\end{itemize}
+KCL at node $a$ gives the test current $i_x$ supplied by the test source (entering node $a$):
+\[
+    i_x = i_1 + 3\,i_1 = 4\,i_1 = 4 \cdot \frac{v_x}{4} = v_x.
+\]
+Therefore:
+\[
+    R_{th} = \frac{v_x}{i_x} = \frac{v_x}{v_x} = 1\,\Omega.
+\]
+
+\textbf{Verification via Method 1.} Short terminals; $v_a = 0$, so $i_1 = 0$ and CCCS $= 0$. All of $I_s$ flows into the short: $i_{sc} = I_s = 2\,\mathrm{A}$.  Then $R_{th} = v_{th}/i_{sc} = 2/2 = 1\,\Omega$. \checkmark
+
+\textbf{Results:}
+\[
+    \boxed{v_{th} = 2\,\mathrm{V}, \quad R_{th} = 1\,\Omega, \quad i_N = 2\,\mathrm{A}.}
+\]
+
+\end{greenbox}
+
+%===========================================================================
+\section{Maximum Power Transfer}
+\label{sec:mpt}
+%===========================================================================
+
+\subsection{Problem Formulation}
+
+Suppose a source circuit has been reduced to its Th\'{e}venin equivalent: a voltage source $v_s$ in series with a source resistance $R_s$.  A variable load resistance $R_L$ is connected to the terminals.  \emph{For what value of $R_L$ is the power delivered to $R_L$ maximized?}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.55\linewidth]{figures/mpt-circuit.pdf}
+    \caption{Th\'{e}venin equivalent driving a load $R_L$.  We seek the $R_L$ that maximises power delivered to the load.}
+    \label{fig:mpt-circuit}
+\end{figure}
+
+\subsection{Expression for Load Power}
+
+The current in the single-mesh circuit is:
+\[
+    i = \frac{v_s}{R_s + R_L}.
+\]
+The power dissipated in $R_L$ is:
+\begin{equation}
+    \label{eqn:pL}
+    p_L(R_L) = i^2 R_L = \frac{v_s^2\,R_L}{(R_s + R_L)^2}.
+\end{equation}
+Note: $p_L \to 0$ when $R_L \to 0$ (short circuit: all voltage across $R_s$, none across $R_L$) and $p_L \to 0$ when $R_L \to \infty$ (open circuit: no current flows).  The maximum therefore occurs at some intermediate value of $R_L$.
+
+\subsection{Optimisation}
+
+To find the maximising $R_L$, differentiate~(\ref{eqn:pL}) with respect to $R_L$ and set the derivative to zero.  Using the quotient rule:
+\begin{align*}
+    \frac{\mathrm{d}p_L}{\mathrm{d}R_L}
+    &= v_s^2 \cdot \frac{(R_s + R_L)^2 - R_L \cdot 2(R_s + R_L)}{(R_s + R_L)^4} \\
+    &= v_s^2 \cdot \frac{(R_s + R_L) - 2R_L}{(R_s + R_L)^3} \\
+    &= v_s^2 \cdot \frac{R_s - R_L}{(R_s + R_L)^3}.
+\end{align*}
+Setting the numerator to zero:
+\[
+    R_s - R_L = 0 \implies \boxed{R_L^{*} = R_s.}
+\]
+We verify this is a maximum: for $R_L < R_s$ the derivative is positive (power increasing), and for $R_L > R_s$ the derivative is negative (power decreasing). \checkmark
+
+\subsection{Maximum Power Delivered}
+
+Substituting $R_L = R_s$ into~(\ref{eqn:pL}):
+\[
+    p_L^{*} = \frac{v_s^2 \cdot R_s}{(R_s + R_s)^2}
+            = \frac{v_s^2 R_s}{4 R_s^2}
+            = \frac{v_s^2}{4 R_s}.
+\]
+
+\begin{cyanbox}{Maximum Power Transfer Theorem}
+The power delivered to a load $R_L$ from a source with Th\'{e}venin equivalent $(v_s, R_s)$ is maximised when:
+\[
+    R_L = R_s,
+\]
+and the maximum power is:
+\[
+    p_L^{*} = \frac{v_s^2}{4R_s}.
+\]
+\end{cyanbox}
+
+\subsection{Efficiency at Maximum Power Transfer}
+
+The total power supplied by the source $v_s$ at the maximum-power operating point ($R_L = R_s$, $i = v_s/(2R_s)$) is:
+\[
+    p_{\text{supplied}} = v_s \cdot i = v_s \cdot \frac{v_s}{2R_s} = \frac{v_s^2}{2R_s}.
+\]
+The power delivered to the load is $p_L^{*} = v_s^2/(4R_s)$.  The efficiency is:
+\[
+    \eta = \frac{p_L^{*}}{p_{\text{supplied}}} = \frac{v_s^2/(4R_s)}{v_s^2/(2R_s)} = \frac{1}{2} = 50\%.
+\]
+
+\begin{redbox}{Efficiency Warning}
+At the maximum power transfer point, \textbf{exactly half} the source power is wasted as heat in $R_s$.  This is acceptable in communication systems where signal power is precious and efficiency is secondary (e.g., antenna matching), but is highly undesirable in power electronics (motors, power supplies) where high efficiency is required.  Engineers in power systems deliberately choose $R_L \gg R_s$ to achieve high efficiency at the cost of delivering less than the theoretical maximum power.
+\end{redbox}
+
+\subsection{Worked Example}
+
+\begin{greenbox}{}{Example 3 — Maximum Power Transfer Applied to Example 1}
+
+From Example~1 we found $v_{th} = 16\,\mathrm{V}$, $R_{th} = 4\,\Omega$.  Using these as $v_s = 16\,\mathrm{V}$ and $R_s = 4\,\Omega$:
+
+\textbf{Optimal load:}
+\[
+    R_L^{*} = R_s = 4\,\Omega.
+\]
+
+\textbf{Maximum power:}
+\[
+    p_L^{*} = \frac{v_s^2}{4R_s} = \frac{(16)^2}{4 \times 4} = \frac{256}{16} = 16\,\mathrm{W}.
+\]
+
+\textbf{Verification:} With $R_L = 4\,\Omega$, the current is $i = 16/(4+4) = 2\,\mathrm{A}$, and $p_L = i^2 R_L = 4 \times 4 = 16\,\mathrm{W}$. \checkmark
+
+\textbf{Efficiency check:} Total power from $v_s$: $p = v_s \cdot i = 16 \times 2 = 32\,\mathrm{W}$.
+Efficiency: $16/32 = 50\%$. \checkmark
+\end{greenbox}
+
+%===========================================================================
+\section{Summary and Method Selection Guide}
+%===========================================================================
+
+\subsection{Procedure for Finding a Th\'{e}venin or Norton Equivalent}
+
+\begin{enumerate}
+    \item \textbf{Identify the terminals} $a$--$b$ across which the equivalent is sought.
+    \item \textbf{Find $v_{th} = v_{\mathrm{oc}}$}: remove any load, leave terminals open, and compute the open-circuit voltage using node-voltage, mesh-current, or superposition.
+    \item \textbf{Find $R_{th}$}: use the method appropriate to the circuit:
+    \begin{itemize}
+        \item \emph{Only independent sources:} Method 2 (deactivate all sources, compute $R_{\mathrm{eq}}$).
+        \item \emph{Dependent sources present:} Method 1 (find $i_{sc}$, then $R_{th} = v_{th}/i_{sc}$) \emph{or} Method 3 (apply a test source, $R_{th} = v_x/i_x$).
+        \item Note: Method 1 requires finding both $v_{oc}$ and $i_{sc}$; Method 3 requires only one additional analysis.
+    \end{itemize}
+    \item \textbf{Draw the equivalent:}
+    \begin{itemize}
+        \item Th\'{e}venin: $v_{th}$ (polarity matching $v_{oc}$) in series with $R_{th}$.
+        \item Norton: $i_N = v_{th}/R_{th}$ in parallel with $R_{th}$.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Method Selection Flowchart}
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+    \hline
+    \textbf{Situation} & \textbf{Method 1} & \textbf{Method 2} & \textbf{Method 3} \\
+    \hline
+    Independent sources only & \checkmark & \checkmark & \checkmark \\
+    Dependent sources present & \checkmark & $\times$ & \checkmark \\
+    No independent sources (only dependent) & $\times$ & --- & \checkmark \\
+    \hline
+\end{tabular}
+\end{center}
+
+\noindent Note: when there are \emph{no} independent sources, $v_{oc} = 0$ and $i_{sc} = 0$, so Method 1 is degenerate.  In this case only Method 3 (test source) applies; $R_{th}$ will generally be non-zero due to the dependent sources.
+
+\subsection{Key Formulas}
+
+\begin{cyanbox}{Formulas to Remember}
+\[
+    v_{th} = v_{\mathrm{oc}}, \qquad
+    i_N    = i_{sc}, \qquad
+    R_{th} = R_N    = \frac{v_{th}}{i_N} = \frac{v_{\mathrm{oc}}}{i_{sc}}.
+\]
+\[
+    \text{Maximum power transfer: } R_L = R_s,\quad
+    p_L^{*} = \frac{v_s^2}{4R_s},\quad \eta = 50\%.
+\]
+\end{cyanbox}
+
+%===========================================================================
+\section*{Figures Checklist}
+%===========================================================================
+
+The following figures should be produced (e.g., with \texttt{circuitikz} or a drawing tool) and placed in the \texttt{figures/} subdirectory:
+
+\begin{enumerate}
+    \item \texttt{thevenin-equivalence.pdf} — Original circuit with arbitrary internal network alongside the Th\'{e}venin equivalent ($v_{th}$ in series with $R_{th}$, driving load $R_L$).
+    \item \texttt{vi-characteristic.pdf} — Plot of the $v$--$i$ straight line with intercepts $v_{\mathrm{oc}}$ (y-axis) and $i_{sc}$ (x-axis), slope $= -R_{th}$.
+    \item \texttt{source-transformation.pdf} — Side-by-side: $V_s$ in series with $R$ vs.\ $I_s = V_s/R$ in parallel with $R$.
+    \item \texttt{norton-equivalence.pdf} — Norton equivalent ($i_N$ in parallel with $R_N$, driving load $R_L$).
+    \item \texttt{mpt-circuit.pdf} — Th\'{e}venin source $(v_s, R_s)$ with variable load $R_L$.
+    \item \texttt{mpt-curve.pdf} — Plot of $p_L$ vs.\ $R_L/R_s$ showing the maximum at $R_L = R_s$.
+    \item \texttt{example1-circuit.pdf} — Example~1: $V_s = 20\,\mathrm{V}$, $R_1 = 5\,\Omega$, $R_2 = 20\,\Omega$, with terminals $a$--$b$ labelled.
+    \item \texttt{example1-thevenin.pdf} — Th\'{e}venin equivalent for Example~1 ($16\,\mathrm{V}$, $4\,\Omega$).
+    \item \texttt{example2-circuit.pdf} — Example~2: $I_s = 2\,\mathrm{A}$, $R_1 = 4\,\Omega$, CCCS $= 3\,i_1$, terminals $a$--$b$.
+    \item \texttt{example2-test-source.pdf} — Example~2 with $I_s$ open-circuited and test voltage $v_x$ applied.
+\end{enumerate}
+
+\end{document}

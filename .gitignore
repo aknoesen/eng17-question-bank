@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Node
+review_ui/frontend/node_modules/
+review_ui/frontend/dist/
+
+# Generated outputs (not source of truth)
+exports/
+backups/
+
+# OS
+.DS_Store
+Thumbs.db

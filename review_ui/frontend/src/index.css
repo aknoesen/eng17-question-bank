@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.katex-error {
+  color: red;
+  font-family: monospace;
+  border: 1px solid red;
+  padding: 2px 4px;
+  border-radius: 3px;
+}

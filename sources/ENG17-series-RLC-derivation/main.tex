@@ -1,0 +1,783 @@
+%
+% This is a borrowed LaTeX template file for lecture notes for CS267,
+% Applications of Parallel Computing, UCBerkeley EECS Department.
+% Now being used for UC Davis' EEC18 class.  When preparing 
+% LaTeX notes for this class, please use this template.
+%
+% To familiarize yourself with this template, the body contains
+% some examples of its use.  Look them over.  Then you can
+% run LaTeX on this file.  After you have LaTeXed this file then
+% you can look over the result either by printing it out with
+% dvips or using xdvi. "pdflatex template.tex" should also work.
+%
+
+\documentclass[twoside]{article}
+\setlength{\oddsidemargin}{0.25 in}
+\setlength{\evensidemargin}{-0.25 in}
+\setlength{\topmargin}{-0.6 in}
+\setlength{\textwidth}{6.5 in}
+\setlength{\textheight}{8.5 in}
+\setlength{\headsep}{0.75 in}
+\setlength{\parindent}{0 in}
+\setlength{\parskip}{0.1 in}
+
+
+\def\R{{\mathbb{R}}}
+\def\pr{{\rm Pr}}
+\def\E{{\mathbb E}}
+\def\X{{\mathcal X}}
+\def\Y{{\mathcal Y}}
+\def\A{{\mathcal A}}
+\def\H{{\mathcal H}}
+\def\F{{\mathcal F}}
+\def\G{{\mathcal G}}
+\def\B{{\mathcal B}}
+\def\Q{{\mathcal Q}}
+\def\D{{\mathcal D}}
+\def\N{{\mathcal N}}
+\def\C{{\mathbb C}}
+\def\I{{\mathcal I}}
+\def\Z{{\mathcal Z}}
+\def\L{{\mathbb L}}
+\def\T{{\mathcal T}}
+\def\var{{\mbox{\tt var}}}
+\def\cov{{\mbox{\tt cov}}}
+\def\ent{{\mbox{\tt Ent}}}
+\def\tphi{\tilde{\phi}}
+
+\usepackage{enumitem}
+\setlist{topsep=0pt, partopsep=0pt, itemsep=0pt, parsep=0pt}
+
+\usepackage{hyperref}
+
+\usepackage{tcolorbox}
+
+\newtcolorbox[auto counter, number within=section]{bluebox}[1]{
+    colback=blue!10, colframe=blue!80!black,
+    coltitle=white, fonttitle=\bfseries,
+    title={#1}
+}
+
+\newtcolorbox[auto counter, number within=section]{redbox}[2][]{
+    colback=red!10, colframe=red!80!black,
+    coltitle=white, fonttitle=\bfseries,
+    title={#2}
+}
+
+\newtcolorbox[auto counter, number within=section]{greenbox}[2][]{
+    colback=green!10, colframe=green!80!black,
+    coltitle=white, fonttitle=\bfseries,
+    title={#2}
+}
+
+\newtcolorbox[auto counter, number within=section]{solutionbox}[2][]{
+    colback=gray!10, colframe=gray,
+    coltitle=white, fonttitle=\bfseries,
+    title={#1}
+}
+
+\newtcolorbox[auto counter, number within=section]{cyanbox}[2][]{
+    colback=cyan!8,
+    colframe=cyan!60!black,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={#2},
+    arc=8pt
+}
+
+\newtcolorbox[auto counter, number within=section]{orangebox}[2][]{
+    colback=orange!10,
+    colframe=orange!70!black,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={#2},
+    arc=8pt
+}
+
+\newtcolorbox[auto counter, number within=section]{lemmabox}[1][]{
+    colback=purple!10,
+    colframe=purple!70!black,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={#1},
+    arc=8pt
+}
+
+
+%
+% ADD PACKAGES here:
+%
+
+\usepackage{amsmath,amsfonts,graphicx}
+
+%
+% The following commands set up the lecnum (lecture number)
+% counter and make various numbering schemes work relative
+% to the lecture number.
+%
+\newcounter{lecnum}
+\renewcommand{\thepage}{\thelecnum-\arabic{page}}
+\renewcommand{\thesection}{\thelecnum.\arabic{section}}
+\renewcommand{\theequation}{\thelecnum.\arabic{equation}}
+\renewcommand{\thefigure}{\thelecnum.\arabic{figure}}
+\renewcommand{\thetable}{\thelecnum.\arabic{table}}
+
+%
+% The following macro is used to generate the header.
+%
+\newcommand{\lecture}[4]{
+   \pagestyle{myheadings}
+   \thispagestyle{plain}
+   \newpage
+   \setcounter{lecnum}{#1}
+   \setcounter{page}{1}
+   \noindent
+   \begin{center}
+   \framebox{
+      \vbox{\vspace{2mm}
+    \hbox to 6.28in { {\bf ENG17: Circuits I
+	\hfill Spring 2025} }
+       \vspace{4mm}
+       \hbox to 6.28in { {\Large \hfill #2  \hfill} }
+       \vspace{2mm}
+       \hbox to 6.28in { {\it Lecturer: #3 } \hfill }
+      \vspace{2mm}}
+   }
+   \end{center}
+   \markboth{#2}{#2}
+
+   {\bf Note}: {\it LaTeX template courtesy of UC Berkeley EECS dept.}
+
+   {\bf Disclaimer}: {\it These notes have not been subjected to the
+   usual scrutiny reserved for formal publications. They may be distributed
+   outside this class only with the permission of the Instructor. \textbf{You may not upload these notes to Chegg, CourseHero, or any similar cheating service.}}
+   \vspace*{4mm}
+}
+%
+% Convention for citations is authors' initials followed by the year.
+% For example, to cite a paper by Leighton and Maggs you would type
+% \cite{LM89}, and to cite a paper by Strassen you would type \cite{S69}.
+% (To avoid bibliography problems, for now we redefine the \cite command.)
+% Also commands that create a suitable format for the reference list.
+\renewcommand{\cite}[1]{[#1]}
+\def\beginrefs{\begin{list}%
+        {[\arabic{equation}]}{\usecounter{equation}
+         \setlength{\leftmargin}{2.0truecm}\setlength{\labelsep}{0.4truecm}%
+         \setlength{\labelwidth}{1.6truecm}}}
+\def\endrefs{\end{list}}
+\def\bibentry#1{\item[\hbox{[#1]}]}
+
+%Use this command for a figure; it puts a figure in wherever you want it.
+%usage: \fig{NUMBER}{SPACE-IN-INCHES}{CAPTION}
+\newcommand{\fig}[3]{
+			\vspace{#2}
+			\begin{center}
+			Figure \thelecnum.#1:~#3
+			\end{center}
+	}
+% Use these for theorems, lemmas, proofs, etc.
+\newtheorem{theorem}{Theorem}[lecnum]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newenvironment{proof}{{\bf Proof:}}{\hfill\rule{2mm}{2mm}}
+
+% **** IF YOU WANT TO DEFINE ADDITIONAL MACROS FOR YOURSELF, PUT THEM HERE:
+
+
+\begin{document}
+%FILL IN THE RIGHT INFO.
+%\lecture{**LECTURE-NUMBER**}{**DATE**}{**LECTURER**}{**SCRIBE**}
+\lecture{1}{Response of the Series RLC Circuit}{Anthony Thomas}{}
+%\footnotetext{These notes are partially based on those of Nigel Mansell.}
+
+% **** YOUR NOTES GO HERE:
+
+\section{Introduction}
+
+In the following note, we derive the voltage response of a capacitor in the series RLC circuit introduced in class. The note provides some addition background on differential equations beyond what is covered in the book.
+
+\subsection{Elaboration on Initial Conditions in Differential Equations}
+
+Before proceeding, we briefly note an issue which was swept under the rug in our previous discussion of differential equations. Consider a general linear first order inhomogeneous differential equation of the form:
+\[
+    f'(t) + af(t) = b,
+\]
+for $a,b$ arbitrary real constants. We said that:
+\[
+    f(t) = e^{-at} + \frac{b}{a},
+\]
+was a solution since $f'(t) = -ae^{-at}$, whereupon:
+\[
+    f'(t) + af(t) = -ae^{-at} + a\left(e^{-at} + \frac{b}{a}\right) = b,
+\]
+as desired. However, we may also note that $f(t) = \pi e^{-at} + b/a$ is also a solution since $f'(t) = -a\pi e^{-at}$, whereupon:
+\[
+    f'(t) + af(t) = -a\pi e^{-at} + a\left(\pi e^{-at} + \frac{b}{a}\right) = b,
+\]
+once again. In fact, any function of the form $f = Ae^{-at} + b/a$ for $A$ a constant is a solution to this differential equation. Thus, there is an entire \emph{family} of solutions:
+\[
+    \F = \left\{Ae^{-at} + \frac{b}{a}\,: A \in \C \right\},
+\]
+where $\C$ is the field of complex numbers (of which real numbers are a subset). Therefore, when we go to derive \emph{the} solution to the differential equation describing the behavior of a circuit, we must take care to select the member of the general family of the solution which agrees physical reality in our circuit. We do this by selecting the member of the general family that matches the known \emph{initial} conditions of our circuit. 
+
+That is to say, $v_{C}(t) = \pi e^{-at} + \frac{b}{a}$ is \emph{a} solution to the general differential equation:
+\[
+    v_{C}'(t) + av_{C}(t) = b, 
+\]
+describing the step-response of the RC circuit. However, it is not \emph{the} solution we want, because it doesn't correctly describe the initial conditions (clearly, at $t = 0$, this does not satisfy $v_{C}(0^{+}) = 0$ and so does not work for the forced response of an uncharged capacitor). The solution we derived using calculus:
+\[
+    v_{C}(t) = \frac{b}{a} + \left(v_{C}(0^{+}) - \frac{b}{a}\right)e^{-at},
+\]
+\emph{does} satisfy this and so it is \emph{the} solution we want. Our solution using calculus did this via our choice of the lower-limit of integration, but we will need to be aware of this explicitly going forward.
+
+\subsection{Overdamped Series RLC Response}
+
+Consider a voltage source in series with: a switch, a resistor, an inductor, and a capacitor as shown in Figure~\ref{fig:series-rlc-circuit}.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/series-rlc-circuit.png}
+    \label{fig:series-rlc-circuit}
+    \caption{The series RLC circuit.}
+\end{figure}
+Our goal is to understand $v_{C}(t)$, the step-response of the voltage across the capacitor after a switch is thrown. We assume an uncharged capacitor at $t = 0^{-}$ whereupon $v_{C}(0^{-}) = 0\,V$. By KVL:
+\[
+    -V_{s} + v_{r}(t) + v_{C}(t) + v_{L}(t) = 0,
+\]
+where $v_{R}, v_{C},$ and $v_{L}$ are the voltages of the resistor, capacitor, and inductor respectively. By Ohm's law:
+\[
+    v_{R}(t) = Ri_{r}(t) = Ri_{C}(t) = RCv_{C}'(t),
+\]
+where the penultimate equality follows by the fact that the components are in series and so must share the same current. Similarly:
+\[
+    v_{L}(t) = Li_{L}'(t) = Li_{C}'(t) = LCv_{C}''(t),
+\]
+where we have used the fact that $i_{C}(t) = C v_{C}'(t)$.
+Plugging these back into our KVL equation and re-arranging yields:
+\[
+    LC v_{C}''(t) + RC v_{C}'(t) + v_{C}(t) = V_{s}.
+\]
+As before, it will be convenient to have a $1$ as the coefficient on $v_{C}''$ and so we divide through by $LC$ to obtain:
+\begin{align*}
+    v_{C}''(t) + \frac{R}{L}v_{C}'(t) + \frac{1}{LC}v_{C}(t) &= \frac{V_{s}}{LC}. \\
+\end{align*}
+Denoting by:
+\begin{align*}
+    a = \frac{R}{L},\; b = \frac{1}{LC},\; c = \frac{V_{s}}{LC},
+\end{align*}
+we have reduced our problem into solving a second-order, linear, inhomogeneous differential equation having constant coefficients:
+\begin{gather}
+    \label{eqn:general-diffeq}
+    v_{C}''(t) + a v_{C}'(t) + b v_{C}(t) = c.
+\end{gather}
+
+
+\subsubsection{Transient and Steady State Response}
+
+It turns out that any solution to~\ref{eqn:general-diffeq} can be expressed as the sum of two components:
+\[
+    v_{C}(t) = v_{tr}(t) + v_{ss}(t),
+\]
+where $v_{tr}$ is called the ``transient response'' and $v_{ss}$ is called the ``steady-state'' response. Intuitively, $v_{tr}$ reflects the short-term behavior of the system in the aftermath of a change (e.g. the switch being thrown). We will generally ask that:
+\[
+    \lim_{t \to \infty} v_{tr}(t) = 0,
+\]
+which justifies the name. The steady-state response $v_{ss}$ reflects the long-term behavior of system after the transient response has died-out. In particular in the limit of large $t$, we have that $v_{tr}(t) = 0$ whereupon $v_{C}(t) = v_{ss}(t)$. In fact, we have already seen such a decomposition in disguise in our discussion of the step response of the RC-circuit:
+\[
+    v_{C}(t) = \underbrace{v_{C}(\infty)}_{v_{ss}(t)} + \underbrace{\left(v_{C}(0^{+}) - v_{C}(\infty)\right)e^{-\frac{t}{RC}}}_{v_{tr}(t)}.
+\]
+Noting that $\lim_{t\to\infty}Ae^{-at} = 0$ for any $A$ and $a > 0$, we obtain that $\lim_{t\to\infty} v_{tr}(t) = 0$ as desired. 
+
+To derive the steady state solution, we can simply note that:
+\[
+    v_{ss}(t) = \frac{c}{b},
+\]
+is (rather trivially) a solution to~\ref{eqn:general-diffeq} since:
+\[
+    v_{ss}'' = v_{ss}' = 0,
+\]
+whereupon:
+\[
+    v_{ss}''(t) + av_{ss}' + b v_{ss} = c,
+\]
+as desired. Recalling that:
+\[
+    c = \frac{V_{s}}{LC}, \text{ and } b = \frac{1}{LC},
+\]
+we obtain that:
+\[
+    v_{ss}(t) = \frac{c}{b} = V_{s} = v_{C}(\infty).
+\]
+
+To derive the transient response, we let:
+\[
+    v_{tr} = v_{C}(t) - v_{ss}(t),
+\]
+whereupon:
+\[
+    v_{tr}' = v_{C}', \text{ and } v_{tr}'' = v_{C}'',
+\]
+since $v_{ss}$ is a constant function meaning its derivatives are all zero. Therefore:
+\begin{align*}
+    v_{tr}''(t) + a v_{tr}'(t) + b v_{tr}(t) &= v_{C}''(t) + av_{C}'(t) + b\left(v_{C}(t) - \frac{c}{b}\right) \\
+    &= \underbrace{v_{C}''(t) + a v_{C}' + b v_{C}(t)}_{c} - \frac{bc}{b} \\
+    &= c - c = 0,
+\end{align*}
+and so the transient response is the solution to the \emph{homogeneous} differential equation:
+\begin{gather}
+    \label{eqn:transient-response}
+    v_{tr}(t)'' + a v_{tr}'(t) + bv_{tr}(t) = 0.
+\end{gather}
+
+\subsubsection{Transient Solution}
+
+Let us now consider the solution to the differential equation governing the transient response given in Equation~\ref{eqn:transient-response}. As before, we intuit that a solution of the form $v_{tr}(t) = e^{st}$ might do the trick. Proceeding under this assumption, we obtain, by noting that $v_{tr}'(t) = se^{st}$ and $v_{tr}''(t) = s^{2}e^{st}$:
+\begin{align*}
+    s^{2}e^{st} + ase^{st} + be^{st} &= 0 \\
+    e^{st}(s^{2} + as + b) &= 0 \\
+    s^{2} + as + b &= 0,
+\end{align*}
+and so we seek the roots of this polynomial --- which is known as the \textbf{characteristic polynomial}. An application of the quadratic formula yields:
+\[
+    s = \frac{-a \pm \sqrt{a^{2} - 4b}}{2}.
+\]
+Therefore, there are up to two distinct roots:
+\begin{align*}
+    s_{1} &= -\frac{a}{2} + \sqrt{\left(\frac{a}{2}\right)^{2} - b} \\
+    s_{2} &= -\frac{a}{2} - \sqrt{\left(\frac{a}{2}\right)^{2} - b},
+\end{align*}
+whereupon we conclude that, in general, $e^{s_{1}t}$ and $e^{s_{2}t}$ are valid solutions to Equation~\ref{eqn:transient-response}. However, as before, there is actually an entire family of solutions and we need to pick out the one that corresponds to physical reality by invoking initial conditions. What, precisely, this process looks like depends on the nature of the roots.
+
+\section{Damping and the Nature of the Roots}
+
+We now proceed to derive the precise form of the response under the three conditions described above in which the roots are:
+\begin{itemize}
+    \item[(1)] Real and coincident ($s_{1} = s_{2}$). We call this the \textbf{critically damped} regime. This corresponds to a situation in which the transient response decays monotonically to zero (in $t$) at the most rapid possible rate.
+    \item[(2)] Real and distinct ($s_{1} \neq s_{2}$). We call this the \textbf{overdamped} regime. This corresponds to a situation in which the transient response decays monotonically to zero (in $t$) but at a slower rate than in the critically damped regime.
+    \item[(3)] Complex-conjugate pairs ($s_{1} = s_{2}^{*}$). We call this the \textbf{underdamped} regime. This corresponds to a situation in which the transient response decays to zero but also displays oscillatory behavior (i.e. the decay is not monotonic).
+\end{itemize}
+In what follows, it will be convenient to introduce the notation:
+\[
+    \alpha = \frac{R}{2L}, \; \omega_{0} = \frac{1}{\sqrt{LC}},
+\]
+whereupon the roots become:
+\[
+    s = -\alpha \pm \sqrt{\alpha^{2} - \omega_{0}^{2}}.
+\]
+
+\subsection{Overdamped Response}
+
+We first consider the situation in which $\alpha > \omega_{0}$ which is equivalent to stating:
+\[
+    R > 2\sqrt{\frac{L}{C}}.
+\]
+In this case the roots of the characteristic polynomial $s_{1},s_{2}$ are \textbf{distinct, real}, and \textbf{negative}.
+
+Our analysis above tells us that $e^{s_{1}t}$ and $e^{s_{2}t}$ are both valid solutions to the 
+transient response. However, we note that, if $f_{1},f_{2}$ are solutions to:
+\[
+    f'' + af' + bf = 0,
+\]
+then any linear combination of them: $f_{3} = \alpha f_{1} + \beta f_{2}$ is as well. To see this, simply note that:
+\begin{align*}
+    f_{3}'' + af_{3}' + bf_{3} &= \alpha f_{1}'' + \beta f_{2}'' + \alpha a f_{1}' + \beta af_{2}' + \alpha bf_{1} + \beta bf_{2} \\ &= \alpha(f_{1}'' + af_{1}' + bf) + \beta(f_{2} '' + a f_{2}' + bf_{2}) \\
+    &= 0,
+\end{align*}
+and so it follows that $f_{3}$ is a solution as well. Therefore, we obtain a family of solutions determined up to a choice of constants $A_{1},A_{2}$:
+\[
+    v_{tr}(t) = A_{1}e^{s_{1}t} + A_{2}e^{s_{2}t}.
+\]
+Finally, recalling that:
+\[
+    v_{C}(t) = v_{tr}(t) + v_{ss}(t),
+\]
+we obtain:
+\[
+    v_{C}(t) = A_{1}e^{s_{1}t} + A_{2}e^{s_{2}t} + v_{C}(\infty).
+\]
+The last piece of the puzzle is to find the coefficients $A_{1},A_{2}$ which agree with physical reality and allow us to select \textbf{the} solution out of this infinitely large family of candidates. We do this by \emph{invoking initial conditions}.
+
+\subsubsection{Invoking Initial Conditions}
+
+To proceed, we make two basic observations. First, that:
+\[
+    v_{C}(0) = A_{1} + A_{2} + v_{C}(\infty),
+\]
+and second, that:
+\begin{align*}
+    i_{C}(0) &= C v_{C}'(0) \\
+             &= C \left(s_{1}A_{1} + s_{2}A_{2}\right),
+\end{align*}
+where we have used the fact that:
+\[
+    v_{C}'(t) = s_{1}A_{1}e^{s_{1}t} + s_{2}A_{2}e^{s_{2}t}.
+\]
+Thus, we obtain a $2 \times 2$ system of linear equations:
+\begin{align*}
+    A_{1} + A_{2} &= v_{C}(0) - v_{C}(\infty) \\
+    s_{1}A_{1} + s_{2}A_{2} &= \frac{i_{C}(0)}{C},
+\end{align*}
+which can be solved via some tedious algebra to obtain that:
+\begin{align*}
+    A_{1} &= \frac{\frac{i_{C}(0)}{C} - s_{2}\left(v_{C}(0) - v_{C}(\infty)\right)}{s_{1} - s_{2}} \\
+    A_{2} &= \frac{\frac{i_{C}(0)}{C} - s_{1}\left(v_{C}(0) - v_{C}(\infty)\right)}{s_{2} - s_{1}}.
+\end{align*}
+Therefore, we obtain the following \textbf{general solution} for the series RLC circuit: \\
+\begin{cyanbox}{Overdamped Series RLC Response}
+    For an overdamped ($\alpha > \omega_{0}$) series RLC circuit with a switching action at $t = 0$, the step response is:
+    \[
+        v_{C}(t) = A_{1}e^{s_{1}t} + A_{2}e^{s_{2}t} + v_{C}(\infty),
+    \]
+    where:
+    \begin{align*}
+    s_{1} &= -\frac{R}{2L} + \sqrt{\left(\frac{R}{2L}\right)^{2} - \frac{1}{LC}}, \\
+    s_{2} &= -\frac{R}{2L} - \sqrt{\left(\frac{R}{2L}\right)^{2} - \frac{1}{LC}}, \\
+    A_{1} &= \frac{\frac{i_{C}(0)}{C} - s_{2}\left(v_{C}(0) - v_{C}(\infty)\right)}{s_{1} - s_{2}}, \\
+    A_{2} &= \frac{\frac{i_{C}(0)}{C} - s_{1}\left(v_{C}(0) - v_{C}(\infty)\right)}{s_{2} - s_{1}}.
+    \end{align*}
+\end{cyanbox}
+Note that it's often easier and less error prone to just set up the characteristic equation and solve the rest from there than to plug in all these numbers.
+
+\subsubsection{Example: Overdamped Response}
+
+\begin{greenbox}{Example}
+    Referring to the circuit in Figure~\ref{fig:series-rlc-circuit}, suppose $V_{s} = 16\,V$, $R = 64\,\Omega$, $L = 0.8\,H$, and $C = 2 mF$. Determine $v_{C}(t)$ and $i_{C}(t)$ for $t > 0$, assuming $v_{C}(0^{-}) = 0\,V$.
+\end{greenbox}
+Setting up our differential equation as before, we obtain:
+\[
+    v_{C}''(t) + \frac{R}{L}v_{C}'(t) + \frac{1}{LC}v_{C}(t) = \frac{V_{s}}{LC}.
+\]
+Plugging in the values we are given, we obtain:
+\begin{align*}
+    v_{C}''(t) + \frac{64}{0.8}v_{C}'(t) + \frac{v_{C}(t)}{0.8 \times 2 \times 10^{-3}} &= \frac{16}{0.8 \times 2 \times 10^{-3}} \\
+    v_{C}''(t) + 80 v_{C}'(t) + \frac{10^{4}}{16}v_{C}(t) &= 10^{4}.
+\end{align*}
+Recalling that the solution can be described as the sum of the transient and steady-state response, we obtain:
+\[
+    v_{C}(t) = v_{ss}(t) + v_{tr}(t),
+\]
+where $v_{ss} = v_{C}(\infty) = 16$. Recall that $v_{tr}(t)$ is the solution to the \emph{homogeneous} equation:
+\[
+    v_{C}''(t) + 80 v_{C}'(t) + \frac{10^{4}}{16}v_{C}(t) = 0,
+\]
+which leads to the characteristic polynomial:
+\[
+    s^{2} + 80s + \frac{10^{4}}{16} = 0.
+\]
+Computing its roots, we find that:
+\[
+    s_{1} = -8.8, \text{ and } s_{2} = -71.2.
+\]
+Therefore, we obtain (for $t > 0$):
+\[
+    v_{C}(t) = A_{1}e^{-8.8t} + A_{2}e^{-71.2t} + 16,
+\]
+Finally, to solve for $A_{1}, A_{2}$, we invoke the initial conditions by first noting that, because voltage across the capacitor cannot change instantaneously:
+\[
+    v_{C}(0^{+}) = v_{C}(0^{-}) = 0,
+\]
+whereupon:
+\[
+    A_{1} + A_{2} = -16.
+\]
+Furthermore, using the fact that current though the inductor cannot change instantaneously:
+\[
+    i_{C}(0^{+}) = i_{L}(0^{+}) = i_{L}(0^{-}) = 0 = C v_{C}'(0),
+\]
+which yields that:
+\[
+    -8.8A_{1} - 71.2A_{2} = 0.
+\]
+Solving this system yields:
+\[
+    A_{1} = -18.25\,V,\;A_{2} = 2.25\,V,
+\]
+whereupon:
+\[
+    v_{C}(t) = -18.25e^{-8.8t} + 2.25e^{-71.2t} + 16,
+\]
+for $t \geq 0$ and $0$ otherwise. To calculate $i_{C}(t)$, we use the fact that:
+\[
+    i_{C} = C\frac{dv_{C}}{dt},
+\]
+and note that:
+\begin{align*}
+    \frac{d}{dt}\left(-18.25e^{-8.8t} + 2.25e^{-71.2t} + 16\right) &= -8.8\times -18.25 e^{-8.8t} - 71.2\times 2.25e^{-71.2t},
+\end{align*}
+to obtain that:
+\[
+    i_{C}(t) = 0.32\left(e^{-8.8t} - e^{-71.2t}\right)\,A.
+\]
+A plot is shown below: 
+\begin{center}
+    \includegraphics[width=0.8\linewidth]{figures/voltage-current.png}
+\end{center}
+
+\subsection{Underdamped Response}
+
+Suppose now that $\alpha < \omega_{0}$ which corresponds to the setting in which $R < 2\sqrt{L/C}$ in our case. We have then that:
+\begin{align*}
+    s_{1} &= -\alpha + j\sqrt{\omega_{0}^{2} - \alpha^{2}} = -\alpha + j \omega_{d} \\
+    s_{2} &= -\alpha - j\omega_{d}
+\end{align*}
+where $\omega_{d}$ is known as the \textbf{damped natural frequency} for reasons that will become apparent shortly. Recall that, for a complex number:
+\[
+    z = x + yj,
+\]
+where $j = \sqrt{-1}$, its conjugate is the complex number:
+\[
+    z^{*} = x - yj,
+\]
+which is of equal magnitude but opposite phase (i.e. has been reflected across the real-axis). Thus, we conclude further that $s_{1} = s_{2}^{*}$ (i.e. the roots exist as a complex-conjugate pair).
+
+Applying the same solution method as in the overdamped setting yields:
+\begin{align*}
+    v_{C}(t) &= A_{1}e^{(-\alpha + j\omega_{d})t} + A_{2}e^{(-\alpha - j\omega_{d})t} + v_{C}(\infty)\\
+             &= A_{1}e^{-\alpha t}e^{j\omega_{d}t} + A_{2}e^{-\alpha t}e^{-j\omega_{d}t} + v_{C}(\infty).
+\end{align*}
+By Euler's identity:
+\[
+    e^{j\theta} = \cos(\theta) + j\sin(\theta),
+\]
+we may write the above as:
+\begin{align*}
+    v_{C}(t) &= A_{1}e^{-\alpha t}(\cos(\omega_{d}t) + j\sin(\omega_{d}t)) + A_{2}e^{-\alpha t}(\cos(\omega_{d}t) - j\sin(\omega_{d}t)) + v_{C}(\infty) \\
+             &= e^{-\alpha t}\left((A_{1} + A_{2})\cos(\omega_{d}t) + j(A_{1} - A_{2})\sin(\omega_{d}t)\right) + v_{C}(\infty) \\
+             &= e^{-\alpha t}\left(D_{1}\cos(\omega_{d}t) + D_{2}\sin(\omega_{d}t)\right) + v_{C}(\infty),
+\end{align*}
+for unknown coefficients $D_{1},D_{2}$. Invoking the initial conditions yields:
+\[
+    v_{C}(0) = D_{1} + v_{C}(\infty),
+\]
+Recalling that $\frac{d}{dt}\sin(at) = a\cos(at)$ and $\frac{d}{dt}\cos(at) = -a\sin(at)$, we obtain:
+\[
+    v_{C}'(t) = e^{-\alpha t}\left(-D_{1}\omega_{d}\sin(\omega_{d}t) + D_{2}\omega_{d}\cos(\omega_{d}t)\right) - \alpha e^{-\alpha t}\left(D_{1}\cos(\omega_{d}t) + D_{2}\sin(\omega_{d}t)\right),
+\]
+in which case:
+\[
+    i_{C}(0) = Cv_{C}'(0) = C(\omega_{d}D_{2} - \alpha D_{1}).
+\]
+Therefore:
+\begin{align*}
+    D_{1} &= v_{C}(0) - v_{C}(\infty) \\
+    D_{2} &= \frac{1}{\omega_{d}}\left(\frac{i_{C}(0)}{C} + \alpha\left(v_{C}(0) - v_{C}(\infty)\right)\right).
+\end{align*}
+\begin{redbox}{Alert: Initial Condition on Current}
+\begin{itemize}
+    \item When invoking the initial condition on current above, we used the fact that $L$ and $C$ are in series whereupon $i_{L} = i_{C}$. By continuity of $i_{L},$ we have that $i_{L}(0^{+}) = i_{L}(0^{-})$.
+    \item You should \emph{not} attempt to justify this by calculating $i_{C}(0^{-})$ directly! Current through a capacitor \emph{can} change instantaneously and so $i_{C}(0^{-}) \neq i_{C}(0^{+})$ \emph{in general}.
+\end{itemize}
+\end{redbox}
+We thus obtain the following general form of solution for the underdamped response:
+\begin{cyanbox}{Underdamped Series RLC Response}
+    For an underdamped ($\alpha < \omega_{0}$) series RLC circuit with a switching action at $t = 0$, the step response, for $t > 0$, is:
+    \[
+        v_{C}(t) = e^{-\alpha t}\left(D_{1}\cos(\omega_{d}t) + D_{2}\sin(\omega_{d}t)\right) + v_{C}(\infty),
+    \]
+    where:
+    \begin{align*}
+    \omega_{d} &= \sqrt{\omega_{0}^{2} - \alpha^{2}} \\
+        D_{1} &= v_{C}(0) - v_{C}(\infty) \\
+    D_{2} &= \frac{1}{\omega_{d}}\left(\frac{i_{C}(0)}{C} + \alpha\left(v_{C}(0) - v_{C}(\infty)\right)\right).
+    \end{align*}
+\end{cyanbox}
+
+\subsubsection*{Physical Interpretation}
+
+It's worth pausing briefly to inspect the form of the underdamped response to reflect on the physical intuition it provides. Let's first consider:
+\[
+    D_{1}\cos(\omega_{d}t) + D_{2}\sin(\omega_{d}t).
+\]
+We first observe that we may equivalently represent this as:
+\[
+    D_{3}\cos(\omega_{d}t + \phi),
+\]
+where $\phi = -\tan^{-1}(D_{2}/D_{1})$ (assuming $D_{1},D_{2} > 0$) and $D_{3} = \sqrt{D_{1}^{2} + D_{2}^{2}}$. To see this, note that we may apply the trig-identity:
+\[
+    \cos(x + \phi) = \cos(x)\cos(\phi) - \sin(x)\sin(\phi),
+\]
+with $x = \omega_{d}t$, to obtain:
+\[
+    \cos(\omega_{d}t + \phi) = \cos(\omega_{d}t)\cos(\phi) - \sin(\omega_{d}t)\sin(\phi),
+\]
+Multiplying through by $D_{3}$ yields:
+\[
+    D_{3}\cos(\omega_{d}t + \phi) = D_{3}\cos(\phi)\cos(\omega_{d}t) - D_{3}\sin(\phi)\sin(\omega_{d}t),
+\]
+and so we may equivalently state that:
+\[
+    D_{1} = D_{3}\cos(\phi),\;D_{2} = -D_{3}\sin(\phi),
+\]
+whereupon:
+\[
+    \frac{D_{2}}{D_{1}} = -\frac{D_{3}\sin(\phi)}{D_{3}\cos(\phi)} = -\frac{\sin(\phi)}{\cos(\phi)} = -\tan(\phi).
+\]
+And so:
+\[
+    \phi = -\tan^{-1} \frac{D_{2}}{D_{1}}.
+\]
+Furthermore, we have, that:
+\begin{align*}
+    D_{1}^{2} + D_{2}^{2} = (D_{3}\cos(\phi))^{2} + (-D_{3}\sin(\phi))^{2} = D_{3}^{2}(\cos(\phi)^{2} + \sin(\phi)^{2}) = D_{3}^{2},
+\end{align*}
+via the Pythagorean identity. Therefore, we conclude that:
+\[
+    D_{3} = \sqrt{D_{1}^{2} + D_{2}^{2}},
+\]
+as claimed. Thus, our solution can be viewed as a cosine wave:
+\[
+    D_{3}\cos(\omega_{d}t + \phi),
+\]
+$\omega_{d}$ is the \emph{angular frequency} in radians/second and $\phi$ is a \emph{phase-shift} that displaces the wave in time. Therefore, the transient response:
+\begin{align*}
+    v_{tr}(t) &= e^{-\alpha t}\left(D_{1}\cos(\omega_{d}t) + D_{2}\sin(\omega_{d}t)\right) \\
+              &= e^{-\alpha t}D_{3}\cos(\omega_{d}t + \phi), 
+\end{align*}
+can be viewed as a wave $\cos(\omega_{d}t + \phi)$ whose base amplitude $D_{3}$ is damped by a factor $e^{-\alpha t}$ that drives it to zero in the limit of $t$. Therefore, our transient response does, indeed, die out as desired. However, it exhibits a more interesting kind of oscillatory behavior on its way to zero. In particular, the oscillations of the transient solution are confined to the \emph{envelope}:
+\[
+    -D_{3}e^{-\alpha t} \leq v_{tr}(t) \leq D_{3}e^{-\alpha t}.
+\]
+
+\subsubsection{Example: Underdamped Response}
+
+\begin{greenbox}{Example}
+    Referring to the circuit in Figure~\ref{fig:series-rlc-circuit}, suppose $V_{s} = 24\,V$, $R = 12\,\Omega$, $L = 0.3\,H$, and $C = 0.72\,mF$. Determine $v_{C}(t)$ and $i_{C}(t)$ for $t > 0$, assuming $v_{C}(0^{-}) = 0\,V$.
+\end{greenbox}
+
+We note first that:
+\[
+    2\sqrt{\frac{0.3}{0.72 \times 10^{-3}}} = 40.824 > 12,
+\]
+and so we are in the underdamped regime. Setting up our differential equation as before yields:
+\begin{align*}
+    v_{C}''(t) + \frac{R}{L}v_{C}'(t) + \frac{1}{LC}v_{C}(t) &= \frac{V_{s}}{LC} \\
+    v_{C}''(t) + \frac{12}{0.3}v_{C}'(t) + \frac{v_{C}(t)}{0.3 \times 0.72 \times 10^{-3}} &= \frac{24}{0.3 \times 0.72 \times 10^{-3}} \\
+    v_{C}''(t) + 40 v_{C}'(t) + 4629.6 v_{C}(t) &= 111111.11.
+\end{align*}
+Solving the resulting characteristic polynomial:
+\[
+    s^{2} + 40 s + 4629.6 = 0,
+\]
+yields the roots (rounded to the nearest integer for convenience):
+\begin{align*}
+    s_{1} &= -20 + 65j \\
+    s_{2} &= -20 - 65j.
+\end{align*}
+Therefore, we have that $\alpha = 20$ and $\omega_{d} = 65$, whereupon we obtain the general solution:
+\[
+    v_{C}(t) = e^{-20t}\left(D_{1}\cos(65 t) + D_{2}\sin(65 t)\right) + 24.
+\]
+Noting that $v_{C}(0) = 0\,V$, $v_{C}(\infty) = V_{S} = 24$, and $i_{C}(0) = 0\,A$, our previous argument concerning the initial conditions yields:
+\[
+    D_{1} = v_{C}(0) - v_{C}(\infty) = -24.
+\]
+and
+\[
+    D_{2} = \frac{\frac{i_{C}(0)}{C} + \alpha (v_{C}(0) - v_{C}(\infty))}{\omega_{d}} = -7.38.
+\]
+Thus, we obtain:
+\[
+    v_{C}(t) = e^{-20t}\left(-24\cos(65 t) - 7.38\sin(65 t)\right) + 24
+\]
+
+\subsection{Critically Damped}
+
+Finally, we consider the case in which $\alpha = \omega_{0}$, whereupon we conclude that there is a single real root at:
+\[
+    s_{1} = s_{2} = -\alpha = -\frac{R}{2L} = s.
+\]
+Let us first try to apply the same solution method as we did for the overdamped case by seeking coefficients satisfying:
+\begin{align*}
+    v_{C}(t) &= A_{1}e^{st} + A_{2}e^{st} + v_{C}(\infty)\\
+             &= (A_{1} + A_{2})e^{st} + v_{C}(\infty) \\
+             &= A_{3}e^{st} + v_{C}(\infty).
+\end{align*}
+Invoking initial conditions yields that:
+\begin{align*}
+    v_{C}(0) &= A_{3} + v_{C}(\infty) \Rightarrow A_{3} = v_{C}(0) - v_{C}(\infty),
+\end{align*}
+but:
+\[
+    i_{C}(0) = sCA_{3} \Rightarrow A_{3} = \frac{i_{C}(0)}{sC},
+\]
+which is not true in general. The problem is that constraining $A_{3} = A_{1} + A_{2}$ couples $i_{C}(0)$ and $v_{C}(0)$ in a physically implausible way. To proceed, we note that:
+\begin{align*}
+    v_{tr}(t) &= B_{1}e^{st} + B_{2}te^{st} \\
+    &= (B_{1} + B_{2}t)e^{st},
+\end{align*}
+is also a valid transient solution in the special case that $\alpha = \omega_{0}$. Indeed:
+\begin{align*}
+    v_{tr}'(t) &= s(B_{1} + B_{2}t)e^{st} + B_{2}e^{st} \\
+    v_{tr}''(t) &= s^{2}(B_{1} + B_{2}t)e^{st} + 2sB_{2}e^{st},
+\end{align*}
+whereupon:
+\begin{align*}
+    v_{tr}''(t) + av_{tr}'(t) + bv_{tr}(t) &=  0 \\
+    s^{2}(B_{1} + B_{2}t)e^{st} + 2sB_{2}e^{st} + sa(B_{1} + B_{2}t)e^{st} + aB_{2}e^{st} + b(B_{1} + B_{2}t)e^{st} &= 0 \\
+ (B_{1} + B_{2}t)(s^{2} + as + b) + B_{2}(a + 2s) &= 0
+\end{align*}
+This can be true in general if and only if:
+\[
+    s^{2} + as + b = 0,
+\]
+and:
+\[
+    a + 2s = 0 \Rightarrow a = -2s.
+\]
+Plugging the latter into the former, we find that:
+\[
+    s^{2} = b \Rightarrow s = \pm \sqrt{b}.
+\]
+The second equation demands that we pick:
+\[
+    s = -\sqrt{b} = -\alpha,
+\]
+consistent with our initial assumption. Therefore, we have that, in the special case that $\alpha = \omega_{0}$, that
+\[
+    v_{C}(t) = (B_{1} + B_{2}t)e^{-\alpha t} + v_{C}(\infty),
+\]
+is a valid solution and we proceed to invoke the initial conditions to find $B_{1},B_{2}$. Doing so yields:
+\[
+    v_{C}(0) = B_{1} + v_{C}(\infty), 
+\]
+and:
+\[
+    i_{C}(0) = Cv_{C}'(0) = C(B_{2} - \alpha B_{1})
+\]
+This yields a $2\times 2$ system which may be solved algebraically to yield:
+\begin{align*}
+    B_{1} &= v_{C}(0) - v_{C}(\infty) \\
+    B_{2} &= \frac{i_{C}(0)}{C} + \alpha\left(v_{C}(0) - v_{C}(\infty)\right).
+\end{align*}
+Thus, we have the following general solution:
+\begin{cyanbox}{Critically Damped Response}
+    For a critically damped ($\alpha = \omega_{0}$) series RLC circuit with a switching action at $t = 0$, the step response is given, for $t > 0$, by:
+    \[
+    v_{C}(t) = (B_{1} + B_{2}t)e^{-\alpha t} + v_{C}(\infty),
+    \]
+    where:
+\begin{align*}
+    B_{1} &= v_{C}(0) - v_{C}(\infty) \\
+    B_{2} &= \frac{i_{C}(0)}{C} + \alpha\left(v_{C}(0) - v_{C}(\infty)\right).
+\end{align*}
+\end{cyanbox}
+
+\subsubsection{Comparison with the Overdamped Regime}
+
+It's worth pausing briefly to compare the transient behavior of the critically damped and overdamped regimes. In the critically damped regime, we have that:
+\[
+    v_{tr}(t) = (B_{1} + B_{2}t)e^{-\alpha t}.
+\]
+In the overdamped regime, on the other hand, we have that:
+\[
+    v_{tr}(t) = A_{1}e^{s_{1}t} + A_{2}e^{s_{2}t}.
+\]
+Recalling that:
+\[
+    s_{1} = -\alpha + \sqrt{\alpha^{2} - \omega_{0}^{2}},
+\]
+we see the overdamped solution contains a term that decays to zero strictly slower in $t$ that in the critically damped regime (i.e. because the coefficient on $t$ in the exponent is a smaller negative number). In fact, the critically damped regime is the one in which the transient response ``dies out'' most rapidly. 
+
+\end{document}
