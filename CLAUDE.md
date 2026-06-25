@@ -7,19 +7,43 @@
 Generate autograded quiz questions from ENG17 module content and store them in a SQLite database.
 This file tells Claude Code exactly how to execute a generation run.
 
+## Git Repository
+This directory is the root of a private git repo:
+  https://github.com/aknoesen/eng17-question-bank
+
+After any meaningful change (new questions, schema edits, config updates):
+  git add -A && git commit -m "<message>" && git push
+
+## Current State (as of 2026-06-24)
+- Modules 1 and 2 are fully generated: 108 questions across 36 topics in veriqa.db
+- Generation scripts: generate_m1_ch1to3.py, generate_m1_ch4to5.py, generate_m2_ch6to8.py
+- All questions are status='draft' — pending human review in review_ui/
+- Do NOT re-run generation scripts for existing topics (EXISTS check will skip them,
+  but avoid unnecessary runs)
+
 ## Project Structure
 ```
 question_bank/
   CLAUDE.md                    <- this file
   schema.sql                   <- database schema (do not modify)
   veriqa.db                    <- SQLite database (persistent across runs)
+  sources/                     <- local copies of all lecture note inputs
+    ENG17-series-RLC-derivation/main.tex
+    ENG17-thevenin-norton-notes/main.tex      <- expanded typed notes (generated)
+    ENG17-thevenin-norton-slides/main.tex     <- Anthony's original Beamer slides
+    ENG17-series-RLC-learning-objectives.md
+    ENG17-thevenin-norton-learning-objectives.md
+  review_ui/                   <- self-contained question reviewer (FastAPI + React)
+    start.sh / start.bat       <- one-click launcher
+    backend/main.py            <- reads veriqa.db at ../../veriqa.db
+    frontend/                  <- React + KaTeX + Tailwind
   templates/
     preamble.md                <- system prompt template
     postamble.md               <- output format template
   module_XX/
     config.md                  <- module metadata and generation parameters
     topics.md                  <- topic table for this module
-    context.md                 <- reading content for this module
+    context.md                 <- reading content for this module (paths into sources/)
     prior_context.md           <- accumulated summaries from prior modules
 ```
 
