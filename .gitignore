@@ -12,6 +12,9 @@ review_ui/frontend/dist/
 exports/
 backups/
 
+# Correspondence
+email_*.md
+
 # OS
 .DS_Store
 Thumbs.db
