@@ -1,6 +1,10 @@
 @echo off
 echo Starting VeriQAI Review UI...
 
+:: Install backend dependencies (fastapi, uvicorn, python-dotenv)
+echo Installing backend dependencies...
+python -m pip install -r "%~dp0backend\requirements.txt"
+
 :: Check for node_modules
 if not exist "%~dp0frontend\node_modules" (
     echo Installing frontend dependencies...

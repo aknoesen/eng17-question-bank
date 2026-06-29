@@ -23,9 +23,10 @@ bash start.sh
 Double-click review_ui\start.bat
 ```
 
-Both scripts install frontend dependencies on first run, start the FastAPI
-backend (port 8000) and Vite dev server (port 5173), then open the browser.
-The only prerequisites are **Python 3.10+** and **Node.js 18+**.
+Both scripts install the backend Python dependencies (`fastapi`, `uvicorn`,
+`python-dotenv`) and the frontend npm dependencies, start the FastAPI backend
+(port 8000) and Vite dev server (port 5173), then open the browser. The only
+prerequisites are **Python 3.10+** (with `pip`) and **Node.js 18+**.
 
 If you prefer to start servers manually:
 ```bash

@@ -3,6 +3,10 @@
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Install backend deps (fastapi, uvicorn, python-dotenv)
+echo "Installing backend dependencies..."
+python3 -m pip install -r "$SCRIPT_DIR/backend/requirements.txt"
+
 # Install frontend deps if needed
 if [ ! -d "$SCRIPT_DIR/frontend/node_modules" ]; then
   echo "Installing frontend dependencies..."
