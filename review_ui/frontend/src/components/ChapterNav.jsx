@@ -1,4 +1,4 @@
-export default function ChapterNav({ chapters, selectedChapter, onSelect, showApproved, onToggleApproved }) {
+export default function ChapterNav({ chapters, selectedChapter, onSelect, showApproved, onToggleApproved, onResetAll }) {
   // Group chapters by module
   const modules = {}
   for (const ch of chapters) {
@@ -54,6 +54,16 @@ export default function ChapterNav({ chapters, selectedChapter, onSelect, showAp
           </div>
         ))}
       </nav>
+
+      <div className="px-4 py-3 border-t border-gray-200 shrink-0">
+        <button
+          onClick={onResetAll}
+          className="w-full text-sm text-gray-500 hover:text-red-600 hover:bg-red-50
+                     border border-gray-200 rounded px-3 py-2 transition-colors"
+        >
+          Reset all to draft
+        </button>
+      </div>
     </aside>
   )
 }

@@ -131,6 +131,28 @@ def update_status(question_id: int, body: StatusUpdate):
         return dict(row)
 
 
+@app.post("/api/reset")
+def reset_to_draft(chapter_id: Optional[int] = None):
+    """Reset review decisions back to 'draft'.
+
+    With no chapter_id, resets every question; otherwise only that chapter.
+    Restores the review queue after questions have been approved/rejected.
+    """
+    with get_db() as conn:
+        if chapter_id is not None:
+            cur = conn.execute(
+                "UPDATE questions SET status = 'draft' "
+                "WHERE chapter_id = ? AND status != 'draft'",
+                (chapter_id,),
+            )
+        else:
+            cur = conn.execute(
+                "UPDATE questions SET status = 'draft' WHERE status != 'draft'"
+            )
+        conn.commit()
+        return {"reset": cur.rowcount}
+
+
 @app.get("/api/summary")
 def get_summary():
     with get_db() as conn:

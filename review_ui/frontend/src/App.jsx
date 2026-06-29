@@ -61,6 +61,19 @@ export default function App() {
     loadSummary()
   }
 
+  async function handleResetAll() {
+    const ok = window.confirm(
+      'Reset ALL questions back to draft?\n\n' +
+      'This clears every approve/reject decision and puts all questions back ' +
+      'into the review queue. Useful if you clicked through them by accident.'
+    )
+    if (!ok) return
+    await fetch(`${API}/api/reset`, { method: 'POST' })
+    setShowApproved(false)
+    await loadChapters(true)
+    await loadSummary()
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <ChapterNav
@@ -69,6 +82,7 @@ export default function App() {
         onSelect={handleChapterSelect}
         showApproved={showApproved}
         onToggleApproved={() => setShowApproved(v => !v)}
+        onResetAll={handleResetAll}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
