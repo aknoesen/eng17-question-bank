@@ -14,12 +14,24 @@ This directory is the root of a private git repo:
 After any meaningful change (new questions, schema edits, config updates):
   git add -A && git commit -m "<message>" && git push
 
-## Current State (as of 2026-06-24)
+## Current State (as of 2026-06-28)
 - Modules 1 and 2 are fully generated: 108 questions across 36 topics in veriqa.db
 - Generation scripts: generate_m1_ch1to3.py, generate_m1_ch4to5.py, generate_m2_ch6to8.py
 - All questions are status='draft' — pending human review in review_ui/
 - Do NOT re-run generation scripts for existing topics (EXISTS check will skip them,
   but avoid unnecessary runs)
+
+## Review State Recovery
+The review UI writes each approve/reject decision to veriqa.db immediately, with no
+undo. Approving (or clicking) through every question empties the draft queue, and the
+UI then shows "all questions reviewed" — which looks like the questions are missing.
+
+To put questions back into the review queue:
+- In the UI: click "Reset all to draft" at the bottom of the sidebar, OR
+- CLI: `python reset_status.py` (all) / `python reset_status.py --chapter N` (one chapter), OR
+- For a clone with no other local changes: `git restore veriqa.db` (restores committed state)
+
+Backend endpoint backing the button: `POST /api/reset` (optional `chapter_id`).
 
 ## Project Structure
 ```
